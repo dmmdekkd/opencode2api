@@ -32,6 +32,22 @@ func Put(object map[string]any, key string, value any) {
 	}
 }
 
+// DropNullValues removes object entries whose value is an explicit JSON null.
+// OpenAI-compatible clients release unset optional fields as null (for example
+// "parallel_tool_calls": null), and a strictly validated upstream such as a
+// pydantic-based server rejects that with a type error instead of treating it
+// as unset. For top-level request fields an omitted key and a null are
+// equivalent, so the entry is dropped. Nested objects are left untouched: a
+// null there can be meaningful (an assistant tool-call turn legitimately
+// carries "content": null).
+func DropNullValues(object map[string]any) {
+	for key, value := range object {
+		if value == nil {
+			delete(object, key)
+		}
+	}
+}
+
 func FirstAny(values ...any) any {
 	for _, value := range values {
 		if value != nil {

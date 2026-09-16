@@ -19,6 +19,12 @@ func PrepareRequest(from, to Protocol, input map[string]any, upstreamURL string)
 	if err != nil {
 		return nil, err
 	}
+	// Same-protocol requests are cloned from the client body, so an explicit
+	// null survives into the upstream payload. Strict upstreams answer that with
+	// a type validation error ("parallel_tool_calls: Input should be a valid
+	// boolean") even though an omitted key is accepted, so top-level nulls are
+	// dropped before the payload is encoded.
+	jsonutil.DropNullValues(output)
 	normalizeToolReasoningHistory(to, jsonutil.StringAt(output, "model"), upstreamURL, output)
 	return output, nil
 }
